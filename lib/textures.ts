@@ -11,15 +11,17 @@ export const luminance = (hex: string) => {
   return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
 };
 
-function canvasTexture(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void) {
+/** scale: 같은 그림을 몇 배 해상도로 굽는가 (비스듬히 봐도 글자가 뭉개지지 않게) */
+function canvasTexture(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void, scale = 1) {
   const cv = document.createElement('canvas');
-  cv.width = w;
-  cv.height = h;
+  cv.width = Math.round(w * scale);
+  cv.height = Math.round(h * scale);
   const g = cv.getContext('2d')!;
+  g.scale(scale, scale);
   draw(g);
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
+  tex.anisotropy = 8;
   return tex;
 }
 
@@ -63,7 +65,7 @@ export function spineTexture(book: Book, thickness: number) {
     while (g.measureText(text).width > maxLen && text.length > 1) text = text.slice(0, -2) + '…';
     g.fillText(text, 0, 2);
     g.restore();
-  });
+  }, 3);
 }
 
 /** 표지: 제목 */
@@ -88,20 +90,30 @@ export function coverTexture(book: Book) {
 
 /** 기둥 맨 아래 명패 */
 export function plateTexture(name: string) {
-  return canvasTexture(256, 64, (g) => {
-    g.fillStyle = '#c9b48a';
-    g.fillRect(0, 0, 256, 64);
-    g.strokeStyle = '#8c7650';
-    g.lineWidth = 4;
-    g.strokeRect(3, 3, 250, 58);
-    g.fillStyle = '#3a2f1d';
-    g.font = `600 30px ${FONT}`;
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    let t = name;
-    while (g.measureText(t).width > 230 && t.length > 1) t = t.slice(0, -2) + '…';
-    g.fillText(t, 128, 34);
-  });
+  // 미색 법랑판에 놋쇠 테두리, 진한 글씨
+  const W = 256;
+  const H = 64;
+  return canvasTexture(
+    W,
+    H,
+    (g) => {
+      g.fillStyle = '#b8935a';
+      g.fillRect(0, 0, W, H);
+      g.fillStyle = '#f4efe4';
+      g.fillRect(4, 4, W - 8, H - 8);
+      g.strokeStyle = 'rgba(140,110,60,0.55)';
+      g.lineWidth = 1;
+      g.strokeRect(8.5, 8.5, W - 17, H - 17);
+      g.fillStyle = '#2b2722';
+      g.font = `600 28px ${FONT}`;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      let t = name;
+      while (g.measureText(t).width > W - 36 && t.length > 1) t = t.slice(0, -2) + '…';
+      g.fillText(t, W / 2, H / 2 + 1);
+    },
+    4,
+  );
 }
 
 /** 선반 뒤판의 미리 그린 음영 (칸 하나 높이로 반복) */

@@ -141,7 +141,7 @@ function Plate({ layout, col, name }: { layout: TowerLayout; col: number; name: 
   return (
     <mesh position={pos} quaternion={quat}>
       <planeGeometry args={[0.2, 0.05]} />
-      <meshStandardMaterial map={tex} roughness={0.4} metalness={0.3} />
+      <meshStandardMaterial map={tex} roughness={0.55} metalness={0} />
     </mesh>
   );
 }
